@@ -129,7 +129,7 @@ public class FileOpener2 extends CordovaPlugin {
 					Context context = cordova.getActivity().getApplicationContext();
 					Uri path = FileProvider.getUriForFile(context, cordova.getActivity().getPackageName() + ".opener.provider", file);
 
-					if (contentType.equals("null")) {
+					if (contentType.equals("null") || contentType.isEmpty()) {
 					    String mimeType = null;
 					    ContentResolver contentResolver = context.getContentResolver();
 					    if (path.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
@@ -149,7 +149,7 @@ public class FileOpener2 extends CordovaPlugin {
 					            file = new File(fileName + '.' + extension.toLowerCase());
 					            path = FileProvider.getUriForFile(context, cordova.getActivity().getPackageName() + ".opener.provider", file);
 					        }
-					        if (contentType.equals("null") && !extension.equals("UNKNOWN")) {
+					        if ((contentType.equals("null") || contentType.isEmpty()) && !extension.equals("UNKNOWN")) {
 					            contentType = mimeType;
 					        }
 					    }
