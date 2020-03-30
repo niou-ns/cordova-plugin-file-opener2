@@ -132,18 +132,27 @@ public class FileOpener2 extends CordovaPlugin {
 					if (contentType.equals("null") || contentType.isEmpty()) {
 					    String mimeType = null;
 					    ContentResolver contentResolver = context.getContentResolver();
+						String fileExtension = MimeTypeMap.getFileExtensionFromUrl(path.toString());
+
 					    if (path.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
 					        mimeType = contentResolver.getType(path);
 					    } else {
-					        String fileExtension = MimeTypeMap.getFileExtensionFromUrl(path.toString());
 					        mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
 					                fileExtension.toLowerCase());
 					    }
 
-					    if (null == mimeType || mimeType.equals("application/octet-stream")) {
+						if ((null == mimeType || mimeType.equals("application/octet-stream")) && fileExtension.equals("msg")) {
+							contentType = "application/vnd.ms-outlook";
+							mimeType = "application/vnd.ms-outlook";
+							openWithDefault = false;
+						} else if (null == mimeType || mimeType.equals("application/octet-stream")) {
 					        String extension = getFileExtFromBytes(file);
 					        if (!extension.equals("UNKNOWN")) {
 					            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+								/* MimeTypeMap might miss .msg */
+								if (null == mimeType && extension.equals("MSG")) {
+									mimeType = "application/vnd.ms-outlook";
+								}
 					            File fileTo = new File(fileName + '.' + extension.toLowerCase());
 					            file.renameTo(fileTo);
 					            file = new File(fileName + '.' + extension.toLowerCase());
@@ -225,7 +234,7 @@ public class FileOpener2 extends CordovaPlugin {
 
   private static final int BUFFER_SIZE = 2048;
   private static final int MICROSOFT_OFFSET = 512;
-  private static final int MAX_SIGNATURE_SIZE = 8;
+  private static final int MAX_SIGNATURE_SIZE = 20;
 
   private static final int[] pdfSig   =   { 0x25, 0x50, 0x44, 0x46 };
   private static final int[] jpgSig   =   { 0xFF, 0xD8, 0xFF, 0xDB };
@@ -240,6 +249,7 @@ public class FileOpener2 extends CordovaPlugin {
   private static final int[] docHead  =   { 0xEC, 0xA5, 0xC1, 0x00 };
   private static final int[] xlsHead  =   { 0xFD, 0xFF, 0xFF, 0xFF };
   private static final int[] pptHead  =   { 0x60, 0x21, 0x1B, 0xF0 };
+  private static final int[] msgHead  =   { 0x52, 0x00, 0x6F, 0x00, 0x6F, 0x00, 0x74, 0x00, 0x20, 0x00, 0x45, 0x00, 0x6E, 0x00, 0x74, 0x00, 0x72, 0x00, 0x79, 0x00 };
   private static final int[] docxEnd  =   { 0x00, 0x77, 0x6F, 0x72, 0x64, 0x2F };
   private static final int[] xlsxEnd  =   { 0x00, 0x00, 0x78, 0x6C, 0x2F };
   private static final int[] pptxEnd  =   { 0x00, 0x00, 0x70, 0x70, 0x74, 0x2F };
@@ -279,6 +289,7 @@ public class FileOpener2 extends CordovaPlugin {
               microsoftMap.put("DOC", docHead);
               microsoftMap.put("XLS", xlsHead);
               microsoftMap.put("PPT", pptHead);
+              microsoftMap.put("MSG", msgHead);
 
               String microsoftType = "UNKNOWN";
               byte[] microsoftBuffer = new byte[MAX_SIGNATURE_SIZE];
